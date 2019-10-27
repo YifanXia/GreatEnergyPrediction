@@ -30,3 +30,14 @@ def get_hour_primary_use(data: pd.DataFrame) -> None:
     
 def get_month_primary_use(data: pd.DataFrame) -> None:
     data.loc[:, 'month_primary_use'] = data.month.map(str) + '_' + data.primary_use
+
+def transform_wind_direction(data: pd.DataFrame) -> None:
+    data.loc[:, 'wind_direction_sin'] = pd.Series(np.sin(np.pi * data.wind_direction.values / 360))
+    
+def prepare_features(data) -> None:
+    get_detailed_datetime(data)
+    get_building_age(data)
+    get_site_primary_use(data)
+    get_month_primary_use(data)
+    get_hour_primary_use(data)
+    transform_wind_direction(data)
