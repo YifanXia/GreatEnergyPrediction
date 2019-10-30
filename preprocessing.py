@@ -7,7 +7,7 @@ def read_building_metadata(path: str) -> pd.DataFrame:
     return pd.read_csv(path)
 
 def log_transform_targets(data: pd.DataFrame) -> None:
-    data.loc[:, 'log_meter_reading'] = np.log(data.loc[:, 'meter_reading'])
+    data.loc[:, 'log_meter_reading'] = np.log1p(data.loc[:, 'meter_reading'])
 
 def read_data(data_path: str, weather_path: str, meta_data: pd.DataFrame, nrows: int = None) -> Tuple[pd.DataFrame, pd.DataFrame]:
     building_data = pd.read_csv(data_path, parse_dates=['timestamp'], nrows=nrows)
