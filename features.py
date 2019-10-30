@@ -58,7 +58,7 @@ def prepare_features(data: pd.DataFrame, weather_data: pd.DataFrame) -> pd.DataF
     get_site_primary_use(data)
     get_month_primary_use(data)
     get_hour_primary_use(data)
-    fill_na_in_weather_data(weather_data)
+    ##fill_na_in_weather_data(weather_data)
     add_yesterday_lag_features(weather_data)
     transform_wind_direction(weather_data)
     return data.merge(weather_data, on=['site_id', 'timestamp'], how='left')
