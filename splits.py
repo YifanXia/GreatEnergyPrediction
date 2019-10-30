@@ -9,8 +9,7 @@ def split_data_by_meter(data: pd.DataFrame) -> Dict:
         meter_data[meter_name] = data[data.meter == METER_ID.get(meter_name)]
     return meter_data
 
-def split_train_validation_by_site(data: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    train_data, valid_data = train_test_split(data, test_size=0.25, random_state=1,
-                                              stratify=data[['site_id', TARGET_COL]])
+def split_train_validation(data: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    train_data, valid_data, _, _ = train_test_split(data, data[TARGET_COL], test_size=0.25, random_state=1)
     
     return (train_data, valid_data)

@@ -24,6 +24,9 @@ def plot_building_meter_reading(building_data: pd.DataFrame, site_id: int, metad
                         '/building_' + str(building_id) + '.png', 
                         format='png')
             plt.close()
+
+def plot_weather_data(weather_data: pd.DataFrame, site_id: int) -> pd.DataFrame:
+    pass
         
 if __name__ == "__main__":
     

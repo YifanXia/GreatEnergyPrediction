@@ -33,11 +33,32 @@ def get_month_primary_use(data: pd.DataFrame) -> None:
 
 def transform_wind_direction(data: pd.DataFrame) -> None:
     data.loc[:, 'wind_direction_sin'] = pd.Series(np.sin(np.pi * data.wind_direction.values / 360))
+
+def fill_na_in_weather_data(weather_data: pd.DataFrame) -> None:
+    weather_data = weather_data.fillna(method='backfill').fillna(method='ffill')
+
+def add_yesterday_lag_features(weather_data: pd.DataFrame, window_size: int = 24) -> None:
+    group_df = weather_data.groupby('site_id')
+    cols_mean = ['air_temperature', 'dew_temperature', 'precip_depth_1_hr', 'sea_level_pressure', 'wind_speed']
+    cols_median = ['cloud_coverage']
+    rolled_mean = group_df[cols_mean].rolling(window=window_size, min_periods=0, win_type='triang')
+    rolled_median = group_df[cols_median].rolling(window=window_size, min_periods=0, win_type=None)
+    lag_mean = rolled_mean.mean().reset_index().astype(np.float16)
+    lag_median = rolled_median.median().reset_index().astype(np.float16)
+
+    for col in cols_mean:
+        weather_data[f'{col}_mean_lag{window_size}'] = lag_mean[col]   
+    for col in cols_median:
+        weather_data[f'{col}_median_lag{window_size}'] = lag_median[col]
     
-def prepare_features(data) -> None:
+    
+def prepare_features(data: pd.DataFrame, weather_data: pd.DataFrame) -> pd.DataFrame:
     get_detailed_datetime(data)
     get_building_age(data)
     get_site_primary_use(data)
     get_month_primary_use(data)
     get_hour_primary_use(data)
-    transform_wind_direction(data)
+    fill_na_in_weather_data(weather_data)
+    add_yesterday_lag_features(weather_data)
+    transform_wind_direction(weather_data)
+    return data.merge(weather_data, on=['site_id', 'timestamp'], how='left')
