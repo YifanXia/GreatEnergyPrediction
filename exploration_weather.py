@@ -20,7 +20,7 @@ def plot_one_site(weather_data: pd.DataFrame, site_id: int, weather: str) -> Non
     
 def plot_weather_by_site(weather_data: pd.DataFrame) -> None:
     for site_id in weather_data['site_id'].unique():
-        for weather in weather_data.columns:
+        for weather in weather_data.columns.difference(['site_id', 'timestamp']):
             plot_one_site(weather_data, site_id, weather)
 
 if __name__ == "__main__":
