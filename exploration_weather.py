@@ -2,7 +2,6 @@ import pandas as pd
 from pandas.plotting import register_matplotlib_converters
 import os
 import matplotlib.pyplot as plt
-import seaborn as sns
 from preprocessing import read_weather_data
 from features import add_feels_like
 

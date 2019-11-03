@@ -14,6 +14,7 @@ FEATURE_LIST = [
     'floor_count',
     'month',
     'day',
+    'dayofyear',
     'dayofweek',
     'hour',
     'building_age',
@@ -25,15 +26,18 @@ FEATURE_LIST = [
     'dew_temperature',
     'precip_depth_1_hr',
     'sea_level_pressure',
-    #'wind_direction',
+    'wind_direction',
+    'relative_humidity',
+    'feels_like',
     'wind_speed',
     'air_temperature_mean_lag24',
     'dew_temperature_mean_lag24',
     'precip_depth_1_hr_mean_lag24',
     'sea_level_pressure_mean_lag24',
     'wind_speed_mean_lag24',
+    'feels_like_mean_lag24',
     'cloud_coverage_median_lag24',
-    'wind_direction_sin',
+    #'wind_direction_sin',
     ]
 
 CATEGORICAL_LIST = [

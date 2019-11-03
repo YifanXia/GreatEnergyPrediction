@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 from typing import Dict
 import numpy as np
 import pandas as pd
@@ -9,10 +10,14 @@ import target
 import splits
 from LgbmTrainer import LgbmModel
 
-MODEL_CODE = '02'
+MODEL_CODE = '05'
+if not os.path.exists(f'model_{MODEL_CODE}'):
+    os.mkdir(f'model_{MODEL_CODE}')
 logging.basicConfig(level=logging.INFO,
+                    #filename=f'model_{MODEL_CODE}/log_file_{MODEL_CODE}.log',
                     format='%(asctime)s %(levelname)s - %(message)s',
                     datefmt='%m-%d %H:%M')
+#sys.stdout = open(f'model_{MODEL_CODE}/log_file_{MODEL_CODE}.log', 'w')
 
 TRAIN_DATA_PATH = "../data/train.csv"
 TRAIN_WEATHER_PATH = "../data/weather_train.csv"
@@ -20,10 +25,14 @@ TEST_DATA_PATH = "../data/test.csv"
 TEST_WEATHER_PATH = "../data/weather_test.csv"
 META_DATA_PATH = "../data/building_metadata.csv"
 
-def preprocess_train(meta_data: pd.DataFrame) -> Dict:
+def preprocess_train(meta_data: pd.DataFrame, remove_zeros: bool) -> Dict:
     #meta_data = pp.read_building_metadata(META_DATA_PATH)
     logging.info('Reading training data')
-    train_building_data, train_weather_data = pp.read_data(TRAIN_DATA_PATH, TRAIN_WEATHER_PATH, meta_data, nrows=None)
+    train_building_data, train_weather_data = pp.read_data(TRAIN_DATA_PATH, 
+                                                           TRAIN_WEATHER_PATH, 
+                                                           meta_data, 
+                                                           remove_zeros=remove_zeros, 
+                                                           nrows=None)
     logging.info('Preparing training features and target')
     training_data = features.prepare_features(train_building_data, train_weather_data)
     target.get_log_target(training_data)
@@ -41,15 +50,15 @@ def preprocess_test(meta_data: pd.DataFrame) -> Dict:
     return test_sets
     
 def run_training_pipeline(meta_data: pd.DataFrame) -> Dict[str, LgbmModel]:
-    train_sets = preprocess_train(meta_data)
+    train_sets = preprocess_train(meta_data, True)
     meter_models = {}
     logging.info('Training Models')
     if not os.path.exists(f'model_{MODEL_CODE}'):
         os.mkdir(f'model_{MODEL_CODE}')
     for meter_type in train_sets:
         model = LgbmModel()
-        model.train(train_sets[meter_type])
         logging.info(f'Training {meter_type} meter model.')
+        model.train(train_sets[meter_type], use_time_based_split=True)
         meter_models[meter_type] = model
         model.save_model(f'model_{MODEL_CODE}/{meter_type}_model_{MODEL_CODE}.pkl')
     logging.info('Training finished.')

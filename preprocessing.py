@@ -9,6 +9,7 @@ def read_building_metadata(path: str) -> pd.DataFrame:
 def read_building_data(path: str, remove_zeros: bool = False) -> pd.DataFrame:
     data = pd.read_csv(path, parse_dates=['timestamp'])
     if remove_zeros:
+        logging.info('Removing zero readings.')
         data = data.query('meter_reading > 0')
     return reduce_mem_usage(data)
 
@@ -29,6 +30,9 @@ def read_data(data_path: str, weather_path: str, meta_data: pd.DataFrame,
     weather_data = reduce_mem_usage(weather_data)
     return (building_meta, weather_data)
 
+def find_consecutive_repeated_readings(data: pd.DataFrame, window_hours: int = 24) -> None:
+    pass
+
 def reduce_mem_usage(df: pd.DataFrame, verbose: bool = True) -> pd.DataFrame:
     numerics = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64']
     start_mem = df.memory_usage().sum() / 1024**2    
@@ -39,20 +43,20 @@ def reduce_mem_usage(df: pd.DataFrame, verbose: bool = True) -> pd.DataFrame:
             c_max = df[col].max()
             if str(col_type)[:3] == 'int':
                 if c_min > np.iinfo(np.int8).min and c_max < np.iinfo(np.int8).max:
-                    df[col] = df[col].astype(np.int8)
+                    df.loc[:, col] = df[col].astype(np.int8)
                 elif c_min > np.iinfo(np.int16).min and c_max < np.iinfo(np.int16).max:
-                    df[col] = df[col].astype(np.int16)
+                    df.loc[:, col] = df[col].astype(np.int16)
                 elif c_min > np.iinfo(np.int32).min and c_max < np.iinfo(np.int32).max:
-                    df[col] = df[col].astype(np.int32)
+                    df.loc[:, col] = df[col].astype(np.int32)
                 elif c_min > np.iinfo(np.int64).min and c_max < np.iinfo(np.int64).max:
-                    df[col] = df[col].astype(np.int64)  
+                    df.loc[:, col] = df[col].astype(np.int64)  
             else:
                 if c_min > np.finfo(np.float16).min and c_max < np.finfo(np.float16).max:
-                    df[col] = df[col].astype(np.float16)
+                    df.loc[:, col] = df[col].astype(np.float16)
                 elif c_min > np.finfo(np.float32).min and c_max < np.finfo(np.float32).max:
-                    df[col] = df[col].astype(np.float32)
+                    df.loc[:, col] = df[col].astype(np.float32)
                 else:
-                    df[col] = df[col].astype(np.float64)    
+                    df.loc[:, col] = df[col].astype(np.float64)    
     end_mem = df.memory_usage().sum() / 1024**2
     if verbose:
         logging.info('Mem. usage decreased to {:5.2f} Mb ({:.1f}% reduction)'.format(end_mem, 100 * (start_mem - end_mem) / start_mem))

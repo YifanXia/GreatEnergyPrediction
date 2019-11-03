@@ -1,11 +1,15 @@
 import pandas as pd
 import numpy as np
+import logging
 
 def get_month(data: pd.DataFrame) -> None:
     data.loc[:, 'month'] = data.timestamp.dt.month
     
 def get_day(data: pd.DataFrame) -> None:
     data.loc[:, 'day'] = data.timestamp.dt.day
+
+def get_dayofyear(data: pd.DataFrame) -> None:
+    data.loc[:, 'dayofyear'] = data.timestamp.dt.dayofyear
     
 def get_dayofweek(data: pd.DataFrame) -> None:
     data.loc[:, 'dayofweek'] = data.timestamp.dt.dayofweek
@@ -15,6 +19,7 @@ def get_hour(data: pd.DataFrame) -> None:
     
 def get_detailed_datetime(data: pd.DataFrame) -> None:
     get_month(data)
+    get_dayofyear(data)
     get_day(data)
     get_dayofweek(data)
     get_hour(data)
@@ -124,6 +129,7 @@ def prepare_features(data: pd.DataFrame, weather_data: pd.DataFrame) -> pd.DataF
     get_month_primary_use(data)
     get_hour_primary_use(data)
     ##fill_na_in_weather_data(weather_data)
+    add_feels_like(weather_data)
     add_yesterday_lag_features(weather_data)
     transform_wind_direction(weather_data)
     return data.merge(weather_data, on=['site_id', 'timestamp'], how='left')
