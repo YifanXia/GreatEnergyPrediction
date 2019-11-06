@@ -18,7 +18,14 @@ def time_based_split_train_validation(data: pd.DataFrame,
                                       test_size_in_days: int) -> Tuple[pd.DataFrame, pd.DataFrame]:
     delta_ts = pd.to_timedelta(f'{test_size_in_days} days')
     split_ts = data.timestamp.max() - delta_ts
-    train_data = data[data.timestamp <= split_ts]
-    valid_data = data[data.timestamp > split_ts]
+    train_data = data[data.timestamp > split_ts]
+    valid_data = data[data.timestamp <= split_ts]
     return (train_data, valid_data)
+
+def time_based_half_year_split(data: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    delta_ts = pd.to_timedelta('163 days')
+    split_ts = data.timestamp.max() - delta_ts
+    data_first_half = data[data.timestamp <= split_ts]
+    data_second_half = data[data.timestamp > split_ts]
+    return (data_first_half, data_second_half)
     

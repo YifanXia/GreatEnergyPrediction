@@ -4,7 +4,9 @@ from typing import Tuple
 import logging
 
 def read_building_metadata(path: str) -> pd.DataFrame:
-    return reduce_mem_usage(pd.read_csv(path))
+    metadata = pd.read_csv(path)
+    metadata.loc[:, 'square_feet'] = np.log(metadata['square_feet'])
+    return reduce_mem_usage(metadata)
 
 def read_building_data(path: str, remove_zeros: bool = False) -> pd.DataFrame:
     data = pd.read_csv(path, parse_dates=['timestamp'])

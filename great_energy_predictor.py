@@ -10,7 +10,7 @@ import target
 import splits
 from LgbmTrainer import LgbmModel
 
-MODEL_CODE = '05'
+MODEL_CODE = '12'
 if not os.path.exists(f'model_{MODEL_CODE}'):
     os.mkdir(f'model_{MODEL_CODE}')
 logging.basicConfig(level=logging.INFO,
@@ -58,7 +58,7 @@ def run_training_pipeline(meta_data: pd.DataFrame) -> Dict[str, LgbmModel]:
     for meter_type in train_sets:
         model = LgbmModel()
         logging.info(f'Training {meter_type} meter model.')
-        model.train(train_sets[meter_type], use_time_based_split=True)
+        model.train(train_sets[meter_type])
         meter_models[meter_type] = model
         model.save_model(f'model_{MODEL_CODE}/{meter_type}_model_{MODEL_CODE}.pkl')
     logging.info('Training finished.')
