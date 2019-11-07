@@ -8,6 +8,7 @@ METER_ID = {
 FEATURE_LIST = [
     'building_id',
     'site_id',
+    'meter',
     'primary_use',
     'square_feet',
     #'year_built',
@@ -66,6 +67,7 @@ FEATURE_LIST = [
 CATEGORICAL_LIST = [
     'building_id',
     'site_id',
+    'meter',
     'primary_use',
     'hour',
     'dayofweek',
