@@ -15,14 +15,14 @@ DEFAULT_PARAMS = {
     'num_iterations': 3000,
     'max_depth': 6,
     'objective': 'regression',
-    'min_child_samples': 10,
+    'min_child_samples': 20,
     'num_leaves': 32,
     #'subsample': .9,
     'subsample': 0.8,
     'colsample_bytree': .8,
     'metric_freq': 100,
     #'lambda_l1': 1.0,
-    #'lambda_l2': 1.0,
+    'lambda_l2': 2.0,
     'silent': False,
 }
 
