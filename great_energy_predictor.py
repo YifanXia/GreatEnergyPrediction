@@ -10,7 +10,7 @@ import target
 import splits
 from LgbmTrainer import LgbmModel
 
-MODEL_CODE = '12'
+MODEL_CODE = '14'
 if not os.path.exists(f'model_{MODEL_CODE}'):
     os.mkdir(f'model_{MODEL_CODE}')
 logging.basicConfig(level=logging.INFO,

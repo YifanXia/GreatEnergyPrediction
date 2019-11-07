@@ -79,8 +79,11 @@ class LgbmModel:
     def train(self, data: pd.DataFrame, params: Dict = None) -> None:
         if params is None:
             params = {}
+        logging.info('Using time-based half-half split.')
         first_half, second_half = time_based_half_year_split(data)
+        logging.info('Training on the 1st half, validation on the 2nd')
         self._train([first_half, second_half])
+        logging.info('Training on the 2nd half, validation on the 1st')
         self._train([second_half, first_half])
         
     def _train(self, data: DFList, params: Dict = None) -> None:
