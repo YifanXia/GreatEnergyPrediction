@@ -5,14 +5,14 @@ import logging
 
 def read_building_metadata(path: str) -> pd.DataFrame:
     metadata = pd.read_csv(path)
-    metadata.loc[:, 'square_feet'] = np.log(metadata['square_feet'])
+    #metadata.loc[:, 'square_feet'] = np.log(metadata['square_feet'])
     return reduce_mem_usage(metadata)
 
 def read_building_data(path: str, remove_zeros: bool = False) -> pd.DataFrame:
     data = pd.read_csv(path, parse_dates=['timestamp'])
     if remove_zeros:
-        logging.info('Removing zero readings.')
-        data = data.query('meter_reading > 0')
+        logging.info('Removing zero readings from site 1.')
+        data = data.query('not (building_id <= 104 & meter == 0 & timestamp <= "2016-05-20")')
     return reduce_mem_usage(data)
 
 def read_weather_data(path: str) -> pd.DataFrame:

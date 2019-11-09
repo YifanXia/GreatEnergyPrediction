@@ -10,10 +10,10 @@ import target
 import splits
 from LgbmTrainer import LgbmModel
 
-MODEL_CODE = '15'
+MODEL_CODE = '17'
 if not os.path.exists(f'model_{MODEL_CODE}'):
     os.mkdir(f'model_{MODEL_CODE}')
-logging.basicConfig(level=logging.INFO,
+logging.basicConfig(level=logging.DEBUG,
                     #filename=f'model_{MODEL_CODE}/log_file_{MODEL_CODE}.log',
                     format='%(asctime)s %(levelname)s - %(message)s',
                     datefmt='%m-%d %H:%M')
@@ -49,9 +49,8 @@ def preprocess_test(meta_data: pd.DataFrame) -> pd.DataFrame:
     logging.info('Test set ready.')
     return test_data
     
-def run_training_pipeline(meta_data: pd.DataFrame) -> Dict[str, LgbmModel]:
+def run_training_pipeline(meta_data: pd.DataFrame) -> LgbmModel:
     train_set = preprocess_train(meta_data, True)
-    meter_models = {}
     logging.info('Training Models')
     if not os.path.exists(f'model_{MODEL_CODE}'):
         os.mkdir(f'model_{MODEL_CODE}')
@@ -60,20 +59,23 @@ def run_training_pipeline(meta_data: pd.DataFrame) -> Dict[str, LgbmModel]:
     model.train(train_set)
     model.save_model(f'model_{MODEL_CODE}/model_{MODEL_CODE}.pkl')
     logging.info('Training finished.')
-    return meter_models
+    return model
 
 def run_prediction_pipeline(meta_data: pd.DataFrame, model: LgbmModel) -> None:
     test_set = preprocess_test(meta_data)
     logging.info(f'Making predictions...')
-    predictions = model.predict(test_set)
-    test_set.loc[:, 'meter_reading'] = np.clip(np.expm1(predictions), 0, None)
+    #predictions = model.predict(test_set)
+    test_set.loc[:, 'meter_reading'] = model.predict(test_set)#np.clip(np.expm1(predictions), 0, None)
     logging.info('Writting predictions...')
-    test_set.sort_values('row_id').to_csv(f'results_{MODEL_CODE}.csv', index=False)
+    test_set[['row_id', 'meter_reading']].sort_values('row_id').to_csv(f'results_{MODEL_CODE}.csv', index=False)
     
 if __name__ == "__main__":
     meta_data = pp.read_building_metadata(META_DATA_PATH)
-    meter_models = run_training_pipeline(meta_data)
-    run_prediction_pipeline(meta_data, meter_models)
+    model = run_training_pipeline(meta_data)
+    #model = LgbmModel()
+    #model.read_model('model_15/model_15.pkl')
+    run_prediction_pipeline(meta_data, model)
+    #pd.read_csv('results_15.csv')[['row_id', 'meter_reading']].sort_values('row_id').to_csv(f'results_15.csv', index=False)
     
     
 

@@ -16,6 +16,9 @@ def get_dayofweek(data: pd.DataFrame) -> None:
     
 def get_hour(data: pd.DataFrame) -> None:
     data.loc[:, 'hour'] = data.timestamp.dt.hour
+
+def is_weekend(data: pd.DataFrame) -> None:
+    data.loc[:, 'is_weekend'] = data['dayofweek'].isin([5, 6]).astype(int)
     
 def get_detailed_datetime(data: pd.DataFrame) -> None:
     get_month(data)
@@ -23,6 +26,7 @@ def get_detailed_datetime(data: pd.DataFrame) -> None:
     get_day(data)
     get_dayofweek(data)
     get_hour(data)
+    is_weekend(data)
 
 def get_building_age(data: pd.DataFrame) -> None:
     data.loc[:, 'building_age'] = data.timestamp.dt.year - data.year_built

@@ -19,7 +19,7 @@ DEFAULT_PARAMS = {
     'num_leaves': 32,
     #'subsample': .9,
     'subsample': 0.8,
-    'colsample_bytree': .8,
+    'colsample_bytree': .9,
     'metric_freq': 100,
     #'lambda_l1': 1.0,
     'lambda_l2': 2.0,
@@ -50,6 +50,7 @@ class LgbmModel:
     
     @staticmethod
     def get_features_target(data: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        logging.debug(f'Features are {FEATURE_LIST}')
         features = data[FEATURE_LIST]
         target = data[TARGET_COL]
         return (features, target)
@@ -73,6 +74,7 @@ class LgbmModel:
             if col in encoder:
                 logging.info(f'Transforming {col}')
                 features.loc[:, col] = features[col].map(encoder[col])
+                logging.debug(f'Encoded {col} are: {features.loc[:, col].unique()}')
         features.loc[:, CATEGORICAL_LIST] = features[CATEGORICAL_LIST].astype('category')
         return features
 
@@ -108,7 +110,7 @@ class LgbmModel:
         for i in range(len(self.model)):
             features = data[FEATURE_LIST]
             features = self.encode(self.encoder[i], features)
-            prediction += self.model[i].predict(features)
+            prediction += np.clip(np.expm1(self.model[i].predict(features)), 0, None)
         return prediction / len(self.model)
     
     def save_model(self, file_name: str) -> None:
