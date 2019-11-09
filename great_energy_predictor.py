@@ -10,10 +10,10 @@ import target
 import splits
 from LgbmTrainer import LgbmModel
 
-MODEL_CODE = '05'
+MODEL_CODE = '18'
 if not os.path.exists(f'model_{MODEL_CODE}'):
     os.mkdir(f'model_{MODEL_CODE}')
-logging.basicConfig(level=logging.INFO,
+logging.basicConfig(level=logging.DEBUG,
                     #filename=f'model_{MODEL_CODE}/log_file_{MODEL_CODE}.log',
                     format='%(asctime)s %(levelname)s - %(message)s',
                     datefmt='%m-%d %H:%M')
@@ -58,7 +58,7 @@ def run_training_pipeline(meta_data: pd.DataFrame) -> Dict[str, LgbmModel]:
     for meter_type in train_sets:
         model = LgbmModel()
         logging.info(f'Training {meter_type} meter model.')
-        model.train(train_sets[meter_type], use_time_based_split=True)
+        model.train(train_sets[meter_type])
         meter_models[meter_type] = model
         model.save_model(f'model_{MODEL_CODE}/{meter_type}_model_{MODEL_CODE}.pkl')
     logging.info('Training finished.')
@@ -71,7 +71,7 @@ def run_prediction_pipeline(meta_data: pd.DataFrame, meter_models: Dict[str, pd.
         logging.info(f'Making predictions for {meter_type} meter...')
         try:
             predictions = meter_models[meter_type].predict(test_sets[meter_type])
-            test_sets[meter_type].loc[:, 'meter_reading'] = np.maximum(np.exp(predictions) - 1, 0)
+            test_sets[meter_type].loc[:, 'meter_reading'] = np.clip(np.expm1(predictions), 0, None)
         except ValueError:
             test_sets[meter_type] = None
     

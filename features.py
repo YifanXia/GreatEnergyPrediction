@@ -17,12 +17,16 @@ def get_dayofweek(data: pd.DataFrame) -> None:
 def get_hour(data: pd.DataFrame) -> None:
     data.loc[:, 'hour'] = data.timestamp.dt.hour
     
+def is_weekend(data: pd.DataFrame) -> None:
+    data.loc[:, 'is_weekend'] = data['dayofweek'].isin([5, 6]).astype(int)
+    
 def get_detailed_datetime(data: pd.DataFrame) -> None:
     get_month(data)
     get_dayofyear(data)
     get_day(data)
     get_dayofweek(data)
     get_hour(data)
+    is_weekend(data)
 
 def get_building_age(data: pd.DataFrame) -> None:
     data.loc[:, 'building_age'] = data.timestamp.dt.year - data.year_built
@@ -99,7 +103,10 @@ def add_feels_like(data: pd.DataFrame, remove_others: bool = False) -> None:
 def fill_na_in_weather_data(weather_data: pd.DataFrame) -> None:
     weather_data = weather_data.fillna(method='backfill').fillna(method='ffill')
 
-def add_yesterday_lag_features(weather_data: pd.DataFrame, window_size: int = 24) -> None:
+def add_clear_sky_index(data: pd.DataFrame) -> None:
+    data.loc[:, 'clear_sky_index'] = 1 - 0.75 * (data['cloud_coverage'] / 8) ** 3
+    
+def add_lag_features(weather_data: pd.DataFrame, window_size: int = 24) -> None:
     group_df = weather_data.groupby('site_id')
     cols_mean = [
         'air_temperature', 
@@ -108,7 +115,8 @@ def add_yesterday_lag_features(weather_data: pd.DataFrame, window_size: int = 24
         'sea_level_pressure', 
         'wind_speed', 
         'relative_humidity', 
-        'feels_like'
+        'feels_like',
+        'clear_sky_index',
         ]
     cols_median = ['cloud_coverage']
     rolled_mean = group_df[cols_mean].rolling(window=window_size, min_periods=0, win_type='triang')
@@ -130,6 +138,9 @@ def prepare_features(data: pd.DataFrame, weather_data: pd.DataFrame) -> pd.DataF
     get_hour_primary_use(data)
     ##fill_na_in_weather_data(weather_data)
     add_feels_like(weather_data)
-    add_yesterday_lag_features(weather_data)
+    add_clear_sky_index(weather_data)
+    add_lag_features(weather_data, window_size=12)
+    add_lag_features(weather_data, window_size=24)
+    add_lag_features(weather_data, window_size=36)
     transform_wind_direction(weather_data)
     return data.merge(weather_data, on=['site_id', 'timestamp'], how='left')

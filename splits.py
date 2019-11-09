@@ -2,6 +2,7 @@ import pandas as pd
 from typing import Tuple, Dict
 from params import METER_ID, TARGET_COL
 from sklearn.model_selection import train_test_split
+import logging
 
 def split_data_by_meter(data: pd.DataFrame) -> Dict:
     meter_data = {}
@@ -22,3 +23,10 @@ def time_based_split_train_validation(data: pd.DataFrame,
     valid_data = data[data.timestamp > split_ts]
     return (train_data, valid_data)
     
+def odd_even_month_half_year_split(data: pd.DataFrame) ->  Tuple[pd.DataFrame, pd.DataFrame]:
+    logging.info('Split data into odd / even months.')
+    odd_half = data[data.timestamp.dt.month % 2 == 1]
+    even_half = data[data.timestamp.dt.month % 2 == 0]
+    logging.debug(f'Odd months are: {odd_half.month.unique()}')
+    logging.debug(f'Even months are: {even_half.month.unique()}')
+    return (odd_half, even_half)
