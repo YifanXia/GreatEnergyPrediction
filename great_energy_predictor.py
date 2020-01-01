@@ -10,7 +10,10 @@ import target
 import splits
 from LgbmTrainer import LgbmModel
 
-MODEL_CODE = '17'
+mpl_logger = logging.getLogger('matplotlib')
+mpl_logger.setLevel(logging.WARNING)
+
+MODEL_CODE = '23'
 if not os.path.exists(f'model_{MODEL_CODE}'):
     os.mkdir(f'model_{MODEL_CODE}')
 logging.basicConfig(level=logging.DEBUG,
@@ -58,6 +61,7 @@ def run_training_pipeline(meta_data: pd.DataFrame) -> LgbmModel:
     logging.info(f'Training energy prediction model.')
     model.train(train_set)
     model.save_model(f'model_{MODEL_CODE}/model_{MODEL_CODE}.pkl')
+    model.plot_feature_importances(f'model_{MODEL_CODE}/feature_{MODEL_CODE}.png')
     logging.info('Training finished.')
     return model
 

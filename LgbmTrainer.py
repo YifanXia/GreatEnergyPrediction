@@ -3,9 +3,15 @@ import pandas as pd
 import numpy as np
 import logging
 from typing import Dict, Tuple, List
-from splits import split_train_validation, time_based_split_train_validation, time_based_half_year_split
+from splits import (
+    split_train_validation, 
+    time_based_split_train_validation, 
+    time_based_half_year_split,
+    odd_even_month_half_year_split
+    )
 from params import FEATURE_LIST, CATEGORICAL_LIST, TARGET_COL
 import pickle
+import matplotlib.pyplot as plt
 
 DFList = List[pd.DataFrame]
 
@@ -13,16 +19,16 @@ DEFAULT_PARAMS = {
     'boosting_type': 'gbdt',
     'learning_rate': 0.05,
     'num_iterations': 3000,
-    'max_depth': 4,
+    #'max_depth': 4,
     'objective': 'regression',
     'min_child_samples': 20,
-    'num_leaves': 32,
+    'num_leaves': 40,
     #'subsample': .9,
     'subsample': 0.8,
     'colsample_bytree': .9,
     'metric_freq': 100,
-    #'lambda_l1': 1.0,
-    'lambda_l2': 2.0,
+    'lambda_l1': 1.0,
+    'lambda_l2': 1.0,
     'silent': False,
 }
 
@@ -81,8 +87,7 @@ class LgbmModel:
     def train(self, data: pd.DataFrame, params: Dict = None) -> None:
         if params is None:
             params = {}
-        logging.info('Using time-based half-half split.')
-        first_half, second_half = time_based_half_year_split(data)
+        first_half, second_half = time_based_half_year_split(data)#odd_even_month_half_year_split(data)
         logging.info('Training on the 1st half, validation on the 2nd')
         self._train([first_half, second_half])
         logging.info('Training on the 2nd half, validation on the 1st')
@@ -113,6 +118,20 @@ class LgbmModel:
             prediction += np.clip(np.expm1(self.model[i].predict(features)), 0, None)
         return prediction / len(self.model)
     
+    def plot_feature_importances(self, file_name: str) -> None:
+        f_imp_1 = self.model[0].booster_.feature_importance(importance_type='gain')
+        f_imp_2 = self.model[1].booster_.feature_importance(importance_type='gain')
+        feature_importances = [
+            (FEATURE_LIST[index], v1 + v2) for index, v1, v2 in zip(list(range(len(FEATURE_LIST))), f_imp_1, f_imp_2)
+        ]
+        feature_importances = list(
+            map(list, zip(*sorted(feature_importances, key=lambda x: x[1], reverse=True)))
+        )
+        plt.figure(figsize=(len(FEATURE_LIST) // 2, 5))
+        plt.bar(feature_importances[0], feature_importances[1])
+        plt.xticks(rotation='vertical')
+        plt.savefig(file_name, format='png')
+        
     def save_model(self, file_name: str) -> None:
         with open(file_name, 'wb') as fout:
             pickle.dump((self.model, self.encoder), fout)

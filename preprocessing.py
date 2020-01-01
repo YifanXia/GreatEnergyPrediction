@@ -8,11 +8,43 @@ def read_building_metadata(path: str) -> pd.DataFrame:
     #metadata.loc[:, 'square_feet'] = np.log(metadata['square_feet'])
     return reduce_mem_usage(metadata)
 
-def read_building_data(path: str, remove_zeros: bool = False) -> pd.DataFrame:
+def remove_consecutive_repeated_readings(data: pd.DataFrame, window_hours: int) -> pd.DataFrame:
+    def compute_diff_in_window(column: pd.Series, backward: bool=False) -> pd.Series:
+        diff = pd.Series(data=np.zeros_like(column.values), index=column.index)
+        f = 1
+        if backward:
+            f = -1
+        diff = sum(column.diff(periods=int(f * (i+1))).abs() for i in range(window_hours))
+        return diff
+    
+    logging.info('Removing consecutive repeated readings.')
+    #data.loc[:, 'diff+'] = data.loc[:, 'diff-'] = 0
+    logging.info(f'Computing differences with a window of {window_hours} hours.')
+    data.loc[:, 'diff+'] = data.groupby(
+        ['building_id', 'meter']
+        )['meter_reading'].transform(compute_diff_in_window)
+    data.loc[:, 'diff-'] = data.groupby(
+        ['building_id', 'meter']
+        )['meter_reading'].transform(compute_diff_in_window, backward=True)
+    # for i in range(window_hours):
+    #     logging.debug(f'Hour: {i+1}.')
+    #     data.loc[:, 'diff+'] += data.groupby(
+    #         ['building_id', 'meter']
+    #         )['meter_reading'].transform(pd.Series.diff, periods=i+1).abs()
+    #     data.loc[:, 'diff-'] += data.groupby(
+    #         ['building_id', 'meter']
+    #         )['meter_reading'].transform(pd.Series.diff, periods=-(i+1)).abs()
+    data = data[~((data['diff+'] == 0) | (data['diff-'] == 0))]
+    return data.drop(['diff+', 'diff-'], axis=1)
+
+def read_building_data(path: str, remove_zeros: bool = False, window_hours: int = 12) -> pd.DataFrame:
     data = pd.read_csv(path, parse_dates=['timestamp'])
     if remove_zeros:
+        logging.debug(f'Data shape before preprocessing: {data.shape}')
         logging.info('Removing zero readings from site 1.')
         data = data.query('not (building_id <= 104 & meter == 0 & timestamp <= "2016-05-20")')
+        data = remove_consecutive_repeated_readings(data, window_hours)
+        logging.debug(f'Data shape after preprocessing: {data.shape}')
     return reduce_mem_usage(data)
 
 def read_weather_data(path: str) -> pd.DataFrame:
@@ -31,9 +63,6 @@ def read_data(data_path: str, weather_path: str, meta_data: pd.DataFrame,
     building_meta = reduce_mem_usage(building_meta)
     weather_data = reduce_mem_usage(weather_data)
     return (building_meta, weather_data)
-
-def find_consecutive_repeated_readings(data: pd.DataFrame, window_hours: int = 24) -> None:
-    pass
 
 def reduce_mem_usage(df: pd.DataFrame, verbose: bool = True) -> pd.DataFrame:
     numerics = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64']

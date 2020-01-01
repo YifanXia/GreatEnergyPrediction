@@ -24,6 +24,7 @@ def time_based_split_train_validation(data: pd.DataFrame,
     return (train_data, valid_data)
 
 def time_based_half_year_split(data: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    logging.info('Using time-based half-half split.')
     delta_ts = pd.to_timedelta('183 days')
     split_ts = data.timestamp.max() - delta_ts
     data_first_half = data[data.timestamp <= split_ts]
